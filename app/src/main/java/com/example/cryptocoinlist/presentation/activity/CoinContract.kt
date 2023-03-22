@@ -1,19 +1,24 @@
 package com.example.cryptocoinlist.presentation.activity
 
+import androidx.compose.runtime.Immutable
 import com.example.cryptocoinlist.domain.models.Coin
 
+@Immutable
 data class CoinState(
     val coinList: List<Coin> = emptyList(),
+    val searchText: String = "",
     val uiState: UiState = UiState.Loading
 )
 
-sealed class CoinSideEffect {
-    object Loading : CoinSideEffect()
-    object ShowCoins: CoinSideEffect()
+@Immutable
+sealed interface CoinSideEffect {
+    object Loading : CoinSideEffect
+    object ShowCoins : CoinSideEffect
 }
 
-enum class UiState{
-    Loading,
-    ShowCoins,
-    Error
+@Immutable
+sealed interface UiState {
+    object Loading : UiState
+    object ShowCoins : UiState
+    object Error : UiState
 }

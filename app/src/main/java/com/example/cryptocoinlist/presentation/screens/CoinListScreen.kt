@@ -11,31 +11,30 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.cryptocoinlist.R
 import com.example.cryptocoinlist.domain.models.Coin
-import com.example.cryptocoinlist.presentation.activity.CoinState
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 fun CoinListScreen(
-    state: CoinState,
+    coinList: ImmutableList<Coin>,
     onCurrentTextChange: (text: String) -> Unit,
+    searchText: String,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
         SearchField(
             modifier = Modifier.fillMaxWidth(),
-            onCurrentTextChange = { text -> onCurrentTextChange(text) })
+            onCurrentTextChange = onCurrentTextChange,
+            searchText = searchText
+        )
         CoinList(
             modifier = Modifier.weight(1f),
-            coins = state.coinList
+            coins = coinList
         )
     }
 }
@@ -44,8 +43,8 @@ fun CoinListScreen(
 fun SearchField(
     onCurrentTextChange: (text: String) -> Unit,
     modifier: Modifier = Modifier,
+    searchText: String
 ) {
-    var message by rememberSaveable { mutableStateOf("") }
 
     Surface(
         modifier = modifier,
@@ -57,7 +56,8 @@ fun SearchField(
             bottomEnd = 9.dp,
         )
     ) {
-        TextField(leadingIcon = { Icon(Icons.Filled.Search, null, tint = Color.Gray) },
+        TextField(
+            leadingIcon = { Icon(Icons.Filled.Search, null, tint = Color.Gray) },
             placeholder = { Text(text = stringResource(R.string.search)) },
             colors = TextFieldDefaults.textFieldColors(
                 focusedIndicatorColor = Color.Transparent,
@@ -65,17 +65,15 @@ fun SearchField(
                 backgroundColor = Color.Transparent,
                 cursorColor = Color.DarkGray
             ),
-            value = message,
-            onValueChange = { newText ->
-                message = newText
-                onCurrentTextChange(newText.trim())
-            })
+            value = searchText,
+            onValueChange = onCurrentTextChange
+        )
     }
 }
 
 @Composable
 fun CoinList(
-    coins: List<Coin>,
+    coins: ImmutableList<Coin>,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState()
 ) {
@@ -105,9 +103,9 @@ fun CoinListItem(item: Coin, modifier: Modifier = Modifier) {
         shape = RoundedCornerShape(corner = CornerSize(16.dp))
     ) {
         Row(modifier = Modifier.padding(8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = item.name, )
+            Text(text = item.name)
             Text(
-                text = stringResource(R.string.price) + item.current_price + stringResource(R.string.dollar_sign) ,
+                text = stringResource(R.string.price) + item.current_price + stringResource(R.string.dollar_sign),
             )
         }
     }

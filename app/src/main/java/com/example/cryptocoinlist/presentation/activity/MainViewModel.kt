@@ -24,6 +24,8 @@ class MainViewModel(private val apiRepository: ApiRepository) :
 
     private var cryptoList: List<Coin> = emptyList()
 
+    private val searchFLow = MutableStateFlow("")
+
     private val errorHandler by lazy {
         CoroutineExceptionHandler { _, _ ->
             intent {
@@ -36,6 +38,7 @@ class MainViewModel(private val apiRepository: ApiRepository) :
 
     init {
         loadCoinList()
+        createSearchFlow()
     }
 
     fun loadCoinList() {
@@ -54,23 +57,17 @@ class MainViewModel(private val apiRepository: ApiRepository) :
         }
     }
 
-    fun search(query: String) {
-        val tempList = mutableListOf<Coin>()
-        MutableStateFlow(query)
+    private fun createSearchFlow() {
+        searchFLow
             .debounce(SEARCH_TIMEOUT)
             .filter { it.length >= SEARCH_QUERY_LENGTH || it.isEmpty() }
-            .map { textQuery ->
+            .onEach { textQuery ->
                 if (textQuery.isNotEmpty()) {
-                    cryptoList.forEach {
-                        if (it.symbol.lowercase().contains(textQuery.lowercase())) {
-                            tempList.add(it)
-                        } else if (it.name.lowercase().contains(textQuery.lowercase())) {
-                            tempList.add(it)
-                        }
-                        intent {
-                            reduce {
-                                state.copy(coinList = tempList)
-                            }
+                    intent {
+                        reduce {
+                            state.copy(coinList = cryptoList.filter {
+                                it.name.lowercase().contains(textQuery.lowercase())
+                            })
                         }
                     }
                 } else {
@@ -83,5 +80,14 @@ class MainViewModel(private val apiRepository: ApiRepository) :
             }
             .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)
+    }
+
+    fun search(query: String) {
+        intent {
+            reduce {
+                state.copy(searchText = query)
+            }
+        }
+        searchFLow.value = query
     }
 }

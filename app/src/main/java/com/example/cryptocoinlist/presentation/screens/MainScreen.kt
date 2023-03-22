@@ -1,32 +1,19 @@
 package com.example.cryptocoinlist.presentation.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import com.example.cryptocoinlist.presentation.activity.CoinSideEffect
 import com.example.cryptocoinlist.presentation.activity.MainViewModel
 import com.example.cryptocoinlist.presentation.activity.UiState
+import kotlinx.collections.immutable.toImmutableList
+import org.koin.androidx.compose.koinViewModel
+import org.orbitmvi.orbit.compose.collectAsState
 
 
 @Composable
-fun MainScreen(viewModel: MainViewModel) {
-    val state by viewModel.container.stateFlow.collectAsState()
-    LaunchedEffect(viewModel) {
-        viewModel.container.sideEffectFlow.collect {
-            when (it) {
-                CoinSideEffect.Loading -> {
-                    Log.d("test", "Loading")
-                }
-                CoinSideEffect.ShowCoins -> {
-                    Log.d("test", "ShowCoins")
-                }
-            }
-        }
-    }
+fun MainScreen(viewModel: MainViewModel = koinViewModel()) {
+    val state by viewModel.collectAsState()
 
     when (state.uiState) {
         UiState.Loading -> {
@@ -34,14 +21,15 @@ fun MainScreen(viewModel: MainViewModel) {
         }
         UiState.ShowCoins -> {
             CoinListScreen(
-                state = state,
-                onCurrentTextChange = { text -> viewModel.search(text) },
-                modifier = Modifier.fillMaxSize()
+                coinList = state.coinList.toImmutableList(),
+                onCurrentTextChange = viewModel::search,
+                modifier = Modifier.fillMaxSize(),
+                searchText = state.searchText
             )
         }
         UiState.Error -> {
             ErrorScreen(
-                onRetryClick = { viewModel.loadCoinList() },
+                onRetryClick = viewModel::loadCoinList,
                 modifier = Modifier.fillMaxSize()
             )
         }
