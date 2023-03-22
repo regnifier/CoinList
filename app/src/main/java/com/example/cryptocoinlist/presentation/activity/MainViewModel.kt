@@ -4,8 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cryptocoinlist.domain.ApiRepository
 import com.example.cryptocoinlist.domain.models.Coin
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +23,7 @@ class MainViewModel(private val apiRepository: ApiRepository) :
 
     override val container = container<CoinState, CoinSideEffect>(CoinState())
 
-    private var cryptoList: ImmutableList<Coin> = persistentListOf()
+    private var cryptoList: List<Coin> = emptyList()
 
     private val searchFLow = MutableStateFlow("")
 
@@ -49,11 +47,11 @@ class MainViewModel(private val apiRepository: ApiRepository) :
             intent {
                 postSideEffect(CoinSideEffect.Loading)
             }
-            val list = apiRepository.getCoins().toImmutableList()
+            val list = apiRepository.getCoins()
             cryptoList = list
             intent {
                 reduce {
-                    state.copy(coinList = list, uiState = UiState.ShowCoins)
+                    state.copy(coinList = list.toImmutableList(), uiState = UiState.ShowCoins)
                 }
                 postSideEffect(CoinSideEffect.ShowCoins)
             }
@@ -72,7 +70,7 @@ class MainViewModel(private val apiRepository: ApiRepository) :
                                 cryptoList.filter {
                                     it.name.lowercase().contains(textQuery.lowercase())
                                 }.toImmutableList()
-                            else cryptoList
+                            else cryptoList.toImmutableList()
                         )
                     }
                 }
