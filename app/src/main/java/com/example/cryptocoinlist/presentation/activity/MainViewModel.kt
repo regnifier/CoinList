@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cryptocoinlist.domain.ApiRepository
 import com.example.cryptocoinlist.domain.models.Coin
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -22,7 +25,7 @@ class MainViewModel(private val apiRepository: ApiRepository) :
 
     override val container = container<CoinState, CoinSideEffect>(CoinState())
 
-    private var cryptoList: List<Coin> = emptyList()
+    private var cryptoList: ImmutableList<Coin> = persistentListOf()
 
     private val searchFLow = MutableStateFlow("")
 
@@ -46,7 +49,7 @@ class MainViewModel(private val apiRepository: ApiRepository) :
             intent {
                 postSideEffect(CoinSideEffect.Loading)
             }
-            val list = apiRepository.getCoins()
+            val list = apiRepository.getCoins().toImmutableList()
             cryptoList = list
             intent {
                 reduce {
@@ -62,19 +65,15 @@ class MainViewModel(private val apiRepository: ApiRepository) :
             .debounce(SEARCH_TIMEOUT)
             .filter { it.length >= SEARCH_QUERY_LENGTH || it.isEmpty() }
             .onEach { textQuery ->
-                if (textQuery.isNotEmpty()) {
-                    intent {
-                        reduce {
-                            state.copy(coinList = cryptoList.filter {
-                                it.name.lowercase().contains(textQuery.lowercase())
-                            })
-                        }
-                    }
-                } else {
-                    intent {
-                        reduce {
-                            state.copy(coinList = cryptoList)
-                        }
+                intent {
+                    reduce {
+                        state.copy(
+                            coinList = if (textQuery.isNotEmpty())
+                                cryptoList.filter {
+                                    it.name.lowercase().contains(textQuery.lowercase())
+                                }.toImmutableList()
+                            else cryptoList
+                        )
                     }
                 }
             }
