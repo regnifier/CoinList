@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">CryptoCoinList</string>
+    <string name="search">Search</string>
+    <string name="error_message">Ooops</string>
+    <string name="retry">retry</string>
+    <string name="price">price:\u0020</string>
+    <string name="dollar_sign">\u0020\u0024</string>
+</resources>
